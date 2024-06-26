@@ -1,5 +1,7 @@
 from flask import Flask , render_template, request, redirect, url_for
 from validate_docbr import CPF, CNPJ
+listaCPF = []
+listaCNPJ = []
 
 app = Flask(__name__)
 
@@ -15,17 +17,13 @@ def geradorCNPJ():
     novoCNPJ = cnpj.generate(True)
     return render_template("geradorCNPJ.html", cnpj = novoCNPJ)
 
-@app.route("/cpfValido")
+@app.route("/cpfValido", methods=["GET"])
 def cpfValido():
-    cpf = CPF()
-    novoCPF = cpf.generate(True)
-    return render_template("cpfValido.html", cpf = novoCPF)
+    return render_template("cpfValido.html", cpf = listaCPF)
 
 @app.route("/cnpjValido")
 def cnpjValido():
-    cnpj = CNPJ()
-    novoCNPJ = cnpj.generate(True)
-    return render_template("cnpjValido.html", cnpj = novoCNPJ)
+    return render_template("cnpjValido.html", cnpj = listaCNPJ)
 
 @app.route("/validarCPF")
 def validarCPF():
@@ -35,18 +33,26 @@ def validarCPF():
 def validarCNPJ():
     return render_template("validarCNPJ.html")
 
-@app.route("/validarCPF", methods=["GET", "POST"])
+@app.route("/validarCPF", methods=["POST"])
 def confirmandoCPF():
     if request.method == "POST":
         cpf = CPF()
         cpfNome = request.form["cpf"]
         cpf.validate(cpfNome)
-    return redirect(url_for("cpfValido"))
+    if cpf.validate(cpfNome) == False:
+        return "CPF Inválido"
+    else:
+        listaCPF.append(cpfNome)
+        return redirect(url_for("cpfValido"))
 
-@app.route("/validarCNPJ", methods=["GET", "POST"])
+@app.route("/validarCNPJ", methods=["POST"])
 def confirmandoCNPJ():
     if request.method == "POST":
         cnpj = CNPJ()
         cnpjNome = request.form["cnpj"]
         cnpj.validate(cnpjNome)
-    return redirect(url_for("cnpjValido"))
+        if cnpj.validate(cnpjNome) == False:
+            return "CNPJ Inválido"
+        else:
+            listaCNPJ.append(cnpjNome)
+            return redirect(url_for("cnpjValido"))

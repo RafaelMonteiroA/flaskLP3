@@ -1,9 +1,4 @@
 from flask import Flask , render_template, request, redirect, url_for
-lista_produtos = [
-        {"nome": "Coca-cola" , "descricao":"Bom" , "preco": "5.00" , "imagem": "https://i.ytimg.com/vi/kgCJV5ChGa4/maxresdefault.jpg"},
-        {"nome": "Pepsi" , "descricao":"Ruim" , "preco": "4.00", "imagem": "https://i.ytimg.com/vi/ey24G0EzJYI/maxresdefault.jpg"},
-        {"nome": "Dolly" , "descricao":"Custo beneficios" , "preco": "2.00" , "imagem": "https://i1.sndcdn.com/artworks-000504423309-2hzdh2-t500x500.jpg"},
-    ]
 
 app = Flask(__name__)
 
@@ -17,11 +12,11 @@ def contato():
 
 @app.route("/produtos")
 def produtos():
-    return render_template("produtos.html", produtos = lista_produtos)
+    return render_template("produtos.html", produtos = obter_produto())
  
 @app.route("/produtos/<nome>")
 def produto(nome):
-    for produto in lista_produtos:
+    for produto in produtos.lista_produtos:
         if produto["nome"] == nome:
             return render_template("produto.html", produto=produto)
 
@@ -33,14 +28,23 @@ def cadastro_produto():
     return render_template("cadastro-produto.html")
 
 @app.route("/produtos", methods=["POST"])
-def salvar_produto():
-    nome = request.form["nome"]
-    descricao = request.form["descricao"]
-    preco = request.form["preco"]
-    imagem = request.form["imagem"]
-    produto = {"nome": nome, "descricao": descricao, "preco": preco, "imagem": imagem}
-    lista_produtos.append(produto)
+def obter_produto():
+   with open("produtos.csv", 'r') as file:
+    lista_produtos = []
+    for linha in file:
+        nome, descricao, preco, imagem = linha.split(",")
+        produto = {
+            "nome": nome,
+            "descricao": descricao,
+            "preco": float(preco),
+            "imagem": imagem
+        }
+        lista_produtos.append(produto)
+    return redirect(url_for("home"))
 
-    return redirect(url_for("produtos"))
+def salvar_produto(p):
+    linha = f"\n{p['nome']},{p['descricao']},{p['preco']},{p['imagem']}"
+    with open(produtos.csv, 'a') as file:
+        file.write(linha)
 
 app.run(port=5001)
